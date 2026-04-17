@@ -1,0 +1,332 @@
+{
+  "source": "principles-of-orchestration-piano.mxl",
+  "instruments": {
+    "Piano": {
+      "note_count": 9,
+      "pitch_range": [
+        34,
+        93
+      ],
+      "avg_pitch": 66.7,
+      "measures_active": 4
+    },
+    "Piccolo": {
+      "note_count": 20,
+      "pitch_range": [
+        62,
+        95
+      ],
+      "avg_pitch": 78.2,
+      "measures_active": 1
+    },
+    "Flute": {
+      "note_count": 23,
+      "pitch_range": [
+        58,
+        96
+      ],
+      "avg_pitch": 77.3,
+      "measures_active": 1
+    },
+    "Bass Flute": {
+      "note_count": 21,
+      "pitch_range": [
+        58,
+        93
+      ],
+      "avg_pitch": 75.6,
+      "measures_active": 1
+    },
+    "Oboe": {
+      "note_count": 19,
+      "pitch_range": [
+        58,
+        89
+      ],
+      "avg_pitch": 73.8,
+      "measures_active": 1
+    },
+    "English Horn": {
+      "note_count": 19,
+      "pitch_range": [
+        58,
+        89
+      ],
+      "avg_pitch": 73.8,
+      "measures_active": 1
+    },
+    "Small Clarinet  (E\u266d- D)": {
+      "note_count": 24,
+      "pitch_range": [
+        52,
+        91
+      ],
+      "avg_pitch": 71.3,
+      "measures_active": 1
+    },
+    "Clarinet (B\u266d - A)": {
+      "note_count": 24,
+      "pitch_range": [
+        52,
+        91
+      ],
+      "avg_pitch": 71.3,
+      "measures_active": 1
+    },
+    "Bass Clarinet (B\u266d - A)": {
+      "note_count": 23,
+      "pitch_range": [
+        48,
+        86
+      ],
+      "avg_pitch": 67.0,
+      "measures_active": 1
+    },
+    "Bassoon": {
+      "note_count": 24,
+      "pitch_range": [
+        34,
+        74
+      ],
+      "avg_pitch": 54.1,
+      "measures_active": 1
+    },
+    "Contrabassoon": {
+      "note_count": 20,
+      "pitch_range": [
+        34,
+        67
+      ],
+      "avg_pitch": 50.7,
+      "measures_active": 1
+    },
+    "Horn (F, E)": {
+      "note_count": 26,
+      "pitch_range": [
+        42,
+        84
+      ],
+      "avg_pitch": 62.7,
+      "measures_active": 1
+    },
+    "Trumpet, Cornet (B\u266d - A, alto in F)": {
+      "note_count": 21,
+      "pitch_range": [
+        54,
+        88
+      ],
+      "avg_pitch": 70.6,
+      "measures_active": 1
+    },
+    "Trombone (tenor, bass)": {
+      "note_count": 27,
+      "pitch_range": [
+        31,
+        74
+      ],
+      "avg_pitch": 51.7,
+      "measures_active": 1
+    },
+    "Tuba (C, Bass)": {
+      "note_count": 24,
+      "pitch_range": [
+        26,
+        65
+      ],
+      "avg_pitch": 45.6,
+      "measures_active": 1
+    },
+    "Timpani": {
+      "note_count": 6,
+      "pitch_range": [
+        40,
+        56
+      ],
+      "avg_pitch": 47.3,
+      "measures_active": 6
+    },
+    "Glockenspiel (with keyboard)": {
+      "note_count": 9,
+      "pitch_range": [
+        55,
+        86
+      ],
+      "avg_pitch": 66.7,
+      "measures_active": 1
+    },
+    "Glockenspiel (ordinary)": {
+      "note_count": 2,
+      "pitch_range": [
+        60,
+        88
+      ],
+      "avg_pitch": 74.0,
+      "measures_active": 1
+    },
+    "Celesta": {
+      "note_count": 3,
+      "pitch_range": [
+        48,
+        96
+      ],
+      "avg_pitch": 68.0,
+      "measures_active": 1
+    },
+    "Xylophone": {
+      "note_count": 7,
+      "pitch_range": [
+        53,
+        86
+      ],
+      "avg_pitch": 60.0,
+      "measures_active": 1
+    },
+    "Harp": {
+      "note_count": 2,
+      "pitch_range": [
+        23,
+        102
+      ],
+      "avg_pitch": 62.5,
+      "measures_active": 2
+    },
+    "Violins": {
+      "note_count": 38,
+      "pitch_range": [
+        55,
+        107
+      ],
+      "avg_pitch": 81.7,
+      "measures_active": 1
+    },
+    "Violas": {
+      "note_count": 30,
+      "pitch_range": [
+        48,
+        88
+      ],
+      "avg_pitch": 70.2,
+      "measures_active": 1
+    },
+    "Violoncellos": {
+      "note_count": 33,
+      "pitch_range": [
+        36,
+        81
+      ],
+      "avg_pitch": 60.1,
+      "measures_active": 1
+    },
+    "Contrabasses": {
+      "note_count": 27,
+      "pitch_range": [
+        36,
+        77
+      ],
+      "avg_pitch": 56.6,
+      "measures_active": 1
+    }
+  },
+  "doublings": [
+    {
+      "instrument_1": "Clarinet (B\u266d - A)",
+      "instrument_2": "Small Clarinet  (E\u266d- D)",
+      "shared_onsets": 24
+    },
+    {
+      "instrument_1": "Bass Clarinet (B\u266d - A)",
+      "instrument_2": "Bassoon",
+      "shared_onsets": 23
+    },
+    {
+      "instrument_1": "Violas",
+      "instrument_2": "Violoncellos",
+      "shared_onsets": 22
+    },
+    {
+      "instrument_1": "Bass Flute",
+      "instrument_2": "Flute",
+      "shared_onsets": 21
+    },
+    {
+      "instrument_1": "Bass Clarinet (B\u266d - A)",
+      "instrument_2": "Small Clarinet  (E\u266d- D)",
+      "shared_onsets": 21
+    },
+    {
+      "instrument_1": "Bass Clarinet (B\u266d - A)",
+      "instrument_2": "Clarinet (B\u266d - A)",
+      "shared_onsets": 21
+    },
+    {
+      "instrument_1": "Bassoon",
+      "instrument_2": "Small Clarinet  (E\u266d- D)",
+      "shared_onsets": 21
+    },
+    {
+      "instrument_1": "Bassoon",
+      "instrument_2": "Clarinet (B\u266d - A)",
+      "shared_onsets": 21
+    },
+    {
+      "instrument_1": "Flute",
+      "instrument_2": "Piccolo",
+      "shared_onsets": 20
+    },
+    {
+      "instrument_1": "Flute",
+      "instrument_2": "Small Clarinet  (E\u266d- D)",
+      "shared_onsets": 20
+    },
+    {
+      "instrument_1": "Bass Flute",
+      "instrument_2": "Small Clarinet  (E\u266d- D)",
+      "shared_onsets": 20
+    },
+    {
+      "instrument_1": "Bass Flute",
+      "instrument_2": "Clarinet (B\u266d - A)",
+      "shared_onsets": 20
+    },
+    {
+      "instrument_1": "Clarinet (B\u266d - A)",
+      "instrument_2": "Flute",
+      "shared_onsets": 20
+    },
+    {
+      "instrument_1": "Bassoon",
+      "instrument_2": "Contrabassoon",
+      "shared_onsets": 20
+    },
+    {
+      "instrument_1": "Violas",
+      "instrument_2": "Violins",
+      "shared_onsets": 20
+    },
+    {
+      "instrument_1": "Contrabasses",
+      "instrument_2": "Violoncellos",
+      "shared_onsets": 20
+    },
+    {
+      "instrument_1": "Flute",
+      "instrument_2": "Oboe",
+      "shared_onsets": 19
+    },
+    {
+      "instrument_1": "Bass Flute",
+      "instrument_2": "Piccolo",
+      "shared_onsets": 19
+    },
+    {
+      "instrument_1": "Bass Flute",
+      "instrument_2": "Oboe",
+      "shared_onsets": 19
+    },
+    {
+      "instrument_1": "Bass Flute",
+      "instrument_2": "English Horn",
+      "shared_onsets": 19
+    }
+  ]
+}

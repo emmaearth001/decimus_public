@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual environments
+venv*/
+.venv/
+
+# Node / Next.js
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
+frontend/.env.local
+frontend/.env.production.local
+
+# Model checkpoints (too large for git)
+ckpt/
+api/ckpt/
+
+# Generated output
+generated/
+api/generated/
+
+# Training data (generated, not checked in)
+data/training/
+api/data/training/
+
+# SoundFonts (bundle your own; see README)
+api/data/soundfonts/*.sf2
+
+# ChromaDB persistent store (regenerate via build script)
+api/data/knowledge_base/chromadb/
+
+# Logs
+logs/
+*.log
+
+# Environment variables (contains API keys)
+.env
+.env.local
+.env.*.local
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Coverage
+.coverage
+htmlcov/
+coverage.xml
+
+# Local editor / assistant state
+.claude/
+CLAUDE.md
+.cursor/
+.aider*

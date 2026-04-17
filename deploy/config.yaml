@@ -1,0 +1,60 @@
+# Decimus LLM Deployment Configuration
+
+model:
+  name: decimus-llm-v1
+  base: meta-llama/Llama-3.1-8B-Instruct
+  adapter: decimus-llm-v1-lora
+
+serving:
+  engine: vllm
+  dtype: float16
+  max_model_len: 2048
+  gpu_memory_utilization: 0.90
+
+api:
+  # Set via environment variable DECIMUS_LLM_URL
+  # RunPod serverless endpoint URL (fill in after deployment):
+  #   https://api.runpod.ai/v2/YOUR_ENDPOINT_ID/openai/v1
+  timeout_seconds: 30
+  max_retries: 2
+
+inference:
+  temperature: 0.7
+  max_tokens: 1024
+  top_p: 0.9
+  system_prompt: >
+    You are Decimus LLM, an expert orchestration advisor trained on
+    Rimsky-Korsakov's Principles of Orchestration. You help composers
+    transform piano sketches into full orchestral scores by recommending
+    instrument assignments, doublings, voicings, and textures.
+    When asked for an orchestration plan, respond with structured JSON.
+
+# Deployment steps:
+#
+# 1. Fine-tune on a rented GPU:
+#    pip install unsloth[cu121] trl datasets
+#    python scripts/finetune.py \
+#      --data data/training/train.jsonl \
+#      --eval data/training/eval.jsonl \
+#      --output checkpoints/decimus-llm-v1 \
+#      --merge
+#
+# 2. Copy merged model into deploy/:
+#    cp -r checkpoints/decimus-llm-v1/merged-fp16 deploy/decimus-llm-v1
+#
+# 3. Build Docker image:
+#    cd deploy && docker build -t YOUR_DOCKERHUB/decimus-llm:v1 .
+#
+# 4. Push to Docker Hub:
+#    docker push YOUR_DOCKERHUB/decimus-llm:v1
+#
+# 5. Create RunPod serverless endpoint:
+#    - Go to runpod.io -> Serverless -> New Endpoint
+#    - Docker image: YOUR_DOCKERHUB/decimus-llm:v1
+#    - GPU: A6000 or A100 (24-40GB VRAM)
+#    - Min workers: 0, Max workers: 1
+#    - Idle timeout: 60s
+#
+# 6. Set environment variables:
+#    export DECIMUS_LLM_URL=https://api.runpod.ai/v2/YOUR_ENDPOINT_ID/openai/v1
+#    export DECIMUS_LLM_KEY=your_runpod_api_key

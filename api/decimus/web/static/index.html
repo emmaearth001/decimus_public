@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decimus — AI Orchestration Engine</title>
+    <style>
+        :root {
+            --bg: #f5f5f7;
+            --surface: #ffffff;
+            --surface2: #eeeef2;
+            --border: #d4d4dc;
+            --text: #1a1a2e;
+            --text-dim: #6b6b80;
+            --accent: #6350d8;
+            --accent-glow: #6350d820;
+            --melody: #d4365a;
+            --bass: #2a7abf;
+            --inner: #2aaa70;
+            --harmony: #c49a1a;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        header .subtitle {
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+
+        .container {
+            max-width: 1540px;
+            margin: 0 auto;
+            padding: 32px;
+            display: grid;
+            grid-template-columns: 300px 1fr 320px;
+            gap: 24px;
+        }
+
+        /* Sidebar / Controls */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 32px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .drop-zone .icon { font-size: 32px; margin-bottom: 8px; }
+        .drop-zone .label { font-size: 13px; color: var(--text-dim); }
+        .drop-zone .filename {
+            font-size: 13px;
+            color: var(--accent);
+            margin-top: 8px;
+            word-break: break-all;
+        }
+
+        input[type="file"] { display: none; }
+
+        select, button {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--surface2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:hover, button:hover {
+            border-color: var(--accent);
+        }
+
+        select option {
+            background: var(--surface2);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding: 12px;
+            font-size: 14px;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.15);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-download {
+            background: transparent;
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .btn-download:hover {
+            background: #16a34a20;
+        }
+
+        /* Main content */
+        .main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Status bar */
+        .status {
+            font-size: 12px;
+            color: var(--text-dim);
+            padding: 8px 0;
+        }
+
+        .status.error { color: var(--danger); }
+        .status.success { color: var(--success); }
+
+        /* Analysis summary */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .stat {
+            background: var(--surface2);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Piano Roll */
+        .piano-roll-container {
+            position: relative;
+            overflow-x: auto;
+            background: var(--surface2);
+            border-radius: 6px;
+        }
+
+        canvas#pianoRoll {
+            display: block;
+            width: 100%;
+            min-height: 250px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+            padding: 8px 12px;
+            font-size: 11px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        /* Orchestration plan */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .role-card {
+            background: var(--surface2);
+            border-radius: 6px;
+            padding: 10px 14px;
+            border-left: 3px solid var(--border);
+            font-size: 12px;
+        }
+
+        .role-card.melody { border-left-color: var(--melody); }
+        .role-card.bass { border-left-color: var(--bass); }
+        .role-card.harmony { border-left-color: var(--harmony); }
+        .role-card.countermelody { border-left-color: var(--inner); }
+        .role-card.doubling { border-left-color: var(--melody); opacity: 0.8; }
+
+        .role-card .instrument {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .role-card .role-label {
+            color: var(--text-dim);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Track results */
+        .tracks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .track-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .track-name {
+            min-width: 120px;
+            font-weight: 600;
+        }
+
+        .track-bar {
+            flex: 1;
+            height: 18px;
+            background: var(--surface2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .track-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        .track-count {
+            min-width: 40px;
+            text-align: right;
+            color: var(--text-dim);
+        }
+
+        /* Advice */
+        .advice-list {
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        .advice-item {
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .advice-item:last-child { border-bottom: none; }
+
+        /* Chords */
+        .chord-progression {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chord-badge {
+            background: var(--surface2);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid var(--border);
+        }
+
+        /* DAW Multitrack Viewer */
+        .daw-transport {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .daw-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border-radius: 50%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .daw-btn:hover { border-color: var(--accent); }
+        .daw-btn.playing { background: var(--accent); border-color: var(--accent); }
+
+        .daw-time {
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+            color: var(--text);
+            min-width: 40px;
+        }
+
+        .daw-time:last-of-type { color: var(--text-dim); }
+
+        .daw-info {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .daw-viewport {
+            position: relative;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface2);
+            min-height: 120px;
+        }
+
+        .daw-ruler {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            height: 24px;
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            font-size: 9px;
+            color: var(--text-dim);
+            user-select: none;
+        }
+
+        .daw-ruler-mark {
+            position: absolute;
+            top: 0;
+            height: 24px;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 4px 3px;
+            border-left: 1px solid var(--border);
+        }
+
+        .daw-lanes {
+            position: relative;
+        }
+
+        .daw-lane {
+            display: flex;
+            height: 36px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .daw-lane:hover { background: var(--accent-glow); }
+
+        .daw-lane-label {
+            width: 110px;
+            min-width: 110px;
+            padding: 0 8px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            z-index: 2;
+            position: sticky;
+            left: 0;
+            user-select: none;
+        }
+
+        .daw-lane-label .role-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .daw-lane-label .inst-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .daw-lane-notes {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .daw-note {
+            position: absolute;
+            height: 4px;
+            border-radius: 2px;
+            min-width: 2px;
+            opacity: 0.85;
+        }
+
+        .daw-note:hover {
+            opacity: 1;
+            height: 6px;
+            margin-top: -1px;
+        }
+
+        .daw-playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ff4444;
+            z-index: 5;
+            pointer-events: none;
+            left: 110px;
+            display: none;
+            box-shadow: 0 0 6px #ff444488;
+        }
+
+        .daw-playhead::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -4px;
+            width: 10px;
+            height: 10px;
+            background: #ff4444;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        .daw-selection {
+            position: absolute;
+            top: 24px;
+            bottom: 0;
+            background: rgba(124, 106, 239, 0.12);
+            border-left: 2px solid var(--accent);
+            border-right: 2px solid var(--accent);
+            z-index: 4;
+            pointer-events: none;
+            display: none;
+        }
+
+        .daw-lane-mute {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 8px;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .daw-lane-mute:hover { border-color: var(--accent); }
+        .daw-lane-mute.muted { background: var(--danger); border-color: var(--danger); color: white; }
+        .daw-lane.muted .daw-lane-notes { opacity: 0.2; }
+
+        /* Log panel */
+        .log-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            z-index: 100;
+            transition: height 0.3s ease;
+        }
+
+        .log-panel.collapsed { height: 36px; }
+        .log-panel.expanded { height: 320px; }
+
+        .log-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 16px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid var(--border);
+            height: 36px;
+        }
+
+        .log-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+        }
+
+        .log-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .health-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-dim);
+        }
+
+        .health-dot.ok { background: var(--success); }
+        .health-dot.error { background: var(--danger); }
+
+        .log-filter {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            width: auto;
+        }
+
+        .log-count {
+            font-size: 10px;
+            color: var(--text-dim);
+            background: var(--surface2);
+            padding: 1px 6px;
+            border-radius: 8px;
+        }
+
+        .log-body {
+            height: calc(100% - 36px);
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.6;
+            padding: 4px 0;
+        }
+
+        .log-entry {
+            padding: 1px 16px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .log-entry:hover {
+            background: var(--surface2);
+        }
+
+        .log-ts { color: var(--text-dim); }
+        .log-level { font-weight: 600; min-width: 55px; display: inline-block; }
+        .log-level.DEBUG { color: var(--text-dim); }
+        .log-level.INFO { color: var(--accent); }
+        .log-level.WARNING { color: var(--harmony); }
+        .log-level.ERROR { color: var(--danger); }
+        .log-level.CRITICAL { color: var(--danger); font-weight: 800; }
+        .log-src { color: #666; }
+        .log-msg { color: var(--text); }
+        .log-exc { color: var(--danger); font-size: 10px; opacity: 0.8; display: block; margin-left: 20px; }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+
+        /* ── Symphony AI Chat ── */
+        .chat-panel {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 140px);
+            position: sticky;
+            top: 32px;
+        }
+
+        .chat-panel .card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-panel h2 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-panel h2 .chat-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 8px 0;
+            min-height: 200px;
+        }
+
+        .chat-msg {
+            font-size: 12px;
+            line-height: 1.5;
+            padding: 10px 12px;
+            border-radius: 8px;
+            max-width: 95%;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .chat-msg.user {
+            background: var(--accent);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-msg.ai {
+            background: var(--surface2);
+            color: var(--text);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-msg.ai .source-tag {
+            display: inline-block;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-top: 6px;
+            padding: 2px 6px;
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+
+        .chat-input-row input {
+            flex: 1;
+            padding: 10px 12px;
+            background: var(--surface2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .chat-input-row input:focus {
+            border-color: var(--accent);
+        }
+
+        .chat-input-row input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .chat-input-row button {
+            width: auto;
+            padding: 10px 14px;
+            font-size: 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+        }
+
+        .chat-input-row button:hover {
+            filter: brightness(1.15);
+        }
+
+        .chat-input-row button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .chat-typing {
+            font-size: 11px;
+            color: var(--text-dim);
+            font-style: italic;
+            padding: 4px 0;
+        }
+
+        .chat-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 4px 0;
+        }
+
+        .chat-suggestion {
+            font-size: 10px;
+            padding: 5px 10px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: all 0.15s;
+            font-family: inherit;
+            width: auto;
+        }
+
+        .chat-suggestion:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .container {
+                grid-template-columns: 300px 1fr;
+            }
+            .chat-panel { display: none; }
+        }
+
+        @media (max-width: 800px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .chat-panel { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>DECIMUS</h1>
+        <span class="subtitle">AI Orchestration Engine &mdash; Piano to Full Score</span>
+    </header>
+
+    <div class="container">
+        <!-- Left: Controls -->
+        <div class="controls">
+            <div class="card">
+                <h2>Input</h2>
+                <div class="drop-zone" id="dropZone">
+                    <div class="icon">&#9835;</div>
+                    <div class="label">Drop a MIDI file or click to browse</div>
+                    <div class="filename hidden" id="fileName"></div>
+                </div>
+                <input type="file" id="fileInput" accept=".mid,.midi">
+                <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">
+                    Accepts .mid/.midi files up to 5 MB. Piano tracks work best.
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Settings</h2>
+                <div class="form-group">
+                    <label>Composer</label>
+                    <select id="styleSelect"></select>
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Ensemble</label>
+                    <select id="ensembleSelect"></select>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="form-group" style="margin-top: 4px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="llmToggle" style="width:auto;accent-color:var(--accent);">
+                        <span>AI-Powered (Decimus LLM)</span>
+                    </label>
+                    <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">
+                        Uses fine-tuned LLM for smarter instrument choices. First call may take ~60s (cold start).
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Actions</h2>
+                <button class="btn-primary" id="btnOrchestrate" disabled>Orchestrate</button>
+                <button style="margin-top: 8px;" id="btnReharmonize" disabled>Reharmonize (Strings)</button>
+                <button class="btn-download hidden" style="margin-top: 12px;" id="btnDownload">Download MIDI</button>
+            </div>
+
+            <!-- SoundFont -->
+            <div class="card">
+                <h2>Sound Library</h2>
+                <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">
+                    Upload a .sf2 SoundFont for better instrument sounds.
+                </div>
+                <div class="drop-zone" id="sfDropZone" style="padding:16px 12px;">
+                    <div class="label">Drop .sf2 file or click</div>
+                    <div class="filename hidden" id="sfName"></div>
+                </div>
+                <input type="file" id="sfInput" accept=".sf2">
+                <div id="sfList" style="margin-top:8px;font-size:11px;"></div>
+            </div>
+
+            <div class="status" id="status"></div>
+        </div>
+
+        <!-- Right: Results -->
+        <div class="main">
+            <!-- DAW Multitrack Viewer — TOP -->
+            <div class="card hidden" id="dawCard">
+                <!-- Transport Controls -->
+                <div class="daw-transport">
+                    <button class="daw-btn" id="dawPlay" title="Play/Pause">&#9654;</button>
+                    <button class="daw-btn" id="dawStop" title="Stop">&#9632;</button>
+                    <span class="daw-time" id="dawTime">0:00</span>
+                    <span class="daw-time" id="dawDuration">/ 0:00</span>
+                    <div style="flex:1;"></div>
+                    <span class="daw-info" id="dawInfo"></span>
+                </div>
+
+                <!-- Measure ruler + Track lanes -->
+                <div class="daw-viewport" id="dawViewport">
+                    <div class="daw-ruler" id="dawRuler"></div>
+                    <div class="daw-lanes" id="dawLanes"></div>
+                    <div class="daw-playhead" id="dawPlayhead"></div>
+                    <div class="daw-selection" id="dawSelection"></div>
+                </div>
+
+                <audio id="audioPlayer" preload="auto"></audio>
+            </div>
+
+            <!-- AI Assistant Chat -->
+            <div class="card hidden" id="refineCard">
+                <div id="chatHistory" style="max-height:160px;overflow-y:auto;margin-bottom:10px;font-size:12px;"></div>
+                <div style="display:flex;gap:8px;">
+                    <input type="text" id="feedbackInput"
+                           placeholder="Ask anything... remove brass, what key is this, make it more dramatic"
+                           style="flex:1;padding:10px 12px;background:var(--surface2);color:var(--text);
+                                  border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;">
+                    <button id="btnRefine" style="width:auto;padding:10px 20px;background:var(--accent);
+                            border-color:var(--accent);font-weight:600;white-space:nowrap;">Send</button>
+                </div>
+                <!-- Hidden measure inputs (set by timeline drag) -->
+                <input type="hidden" id="measureStart" value="0">
+                <input type="hidden" id="measureEnd" value="0">
+            </div>
+
+            <!-- Hidden containers kept for JS compatibility -->
+            <div class="hidden" id="analysisCard"><div id="statsGrid"></div></div>
+            <div class="hidden" id="planCard"><div id="rolesGrid"></div></div>
+        </div>
+
+        <!-- Right: Symphony AI Chat -->
+        <div class="chat-panel">
+            <div class="card">
+                <h2><span class="chat-dot"></span> Symphony AI</h2>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-msg ai">Ask me anything about orchestration, instrument combinations, composer techniques, or scoring principles.</div>
+                    <div class="chat-suggestions" id="chatSuggestions">
+                        <button class="chat-suggestion">When should I double flute with violin?</button>
+                        <button class="chat-suggestion">How did Tchaikovsky use brass?</button>
+                        <button class="chat-suggestion">Best instruments for a quiet passage?</button>
+                        <button class="chat-suggestion">How to avoid muddy voicing?</button>
+                    </div>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" placeholder="Ask about orchestration..." autocomplete="off">
+                    <button id="chatSend">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div class="log-panel collapsed" id="logPanel">
+        <div class="log-header" id="logHeader">
+            <div class="log-header-left">
+                <span id="logToggleIcon">&#9650;</span>
+                <span>Logs</span>
+                <span class="log-count" id="logCount">0</span>
+                <div class="health-dot" id="healthDot" title="Server status"></div>
+            </div>
+            <div class="log-header-right">
+                <select class="log-filter" id="logLevelFilter">
+                    <option value="DEBUG">ALL</option>
+                    <option value="INFO" selected>INFO+</option>
+                    <option value="WARNING">WARN+</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+                <button style="width:auto;padding:2px 8px;font-size:10px;" id="logClear">Clear</button>
+            </div>
+        </div>
+        <div class="log-body" id="logBody"></div>
+    </div>
+
+    <script>
+        // State
+        let currentFile = null;
+        let downloadUrl = null;
+
+        // Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const styleSelect = document.getElementById('styleSelect');
+        const ensembleSelect = document.getElementById('ensembleSelect');
+        const btnOrchestrate = document.getElementById('btnOrchestrate');
+        const btnReharmonize = document.getElementById('btnReharmonize');
+        const btnDownload = document.getElementById('btnDownload');
+        const status = document.getElementById('status');
+
+        // Load options
+        fetch('/api/options').then(r => r.json()).then(data => {
+            data.styles.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                opt.textContent = s.description;
+                styleSelect.appendChild(opt);
+            });
+            data.ensembles.forEach(e => {
+                const opt = document.createElement('option');
+                opt.value = e.name;
+                opt.textContent = `${e.name} (${e.instruments.length} instruments)`;
+                ensembleSelect.appendChild(opt);
+            });
+        });
+
+        // File upload
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) handleFile(fileInput.files[0]);
+        });
+
+        function handleFile(file) {
+            // Validate file type
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!['mid', 'midi'].includes(ext)) {
+                setStatus(`Error: '${file.name}' is not a MIDI file. Please upload a .mid or .midi file.`, 'error');
+                return;
+            }
+            if (file.size === 0) {
+                setStatus(`Error: '${file.name}' is empty.`, 'error');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                setStatus(`Error: File too large (${(file.size/1024/1024).toFixed(1)} MB). Max 5 MB.`, 'error');
+                return;
+            }
+
+            // Validate MIDI header (first 4 bytes = "MThd")
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arr = new Uint8Array(e.target.result);
+                const header = String.fromCharCode(arr[0], arr[1], arr[2], arr[3]);
+                if (header !== 'MThd') {
+                    setStatus(`Error: '${file.name}' is not a valid MIDI file (bad header). Make sure it's a .mid file, not a renamed audio file.`, 'error');
+                    return;
+                }
+                // Valid — accept
+                currentFile = file;
+                fileName.textContent = file.name;
+                fileName.classList.remove('hidden');
+                btnOrchestrate.disabled = false;
+                btnReharmonize.disabled = false;
+                setStatus(`Loaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+            };
+            reader.readAsArrayBuffer(file.slice(0, 4));
+        }
+
+        // Actions
+        btnOrchestrate.addEventListener('click', async () => {
+            if (!currentFile) return;
+            setStatus('<span class="spinner"></span> Orchestrating...', '');
+            disableButtons(true);
+
+            const form = new FormData();
+            form.append('file', currentFile);
+            form.append('style', styleSelect.value);
+            form.append('ensemble', ensembleSelect.value);
+            form.append('use_llm', document.getElementById('llmToggle').checked);
+
+            try {
+                const res = await fetch('/api/orchestrate', { method: 'POST', body: form });
+                const text = await res.text();
+                let data;
+                try { data = JSON.parse(text); } catch { throw new Error(`Server returned: ${res.status} ${res.statusText} — ${text.slice(0, 200)}`); }
+                if (!res.ok) throw new Error(data.detail || `${res.status} ${res.statusText}`);
+                showAnalysis(data.analysis);
+                showPlan(data.plan);
+                showTracks(data.result);
+                showAudio(data.result.audio_url);
+                document.getElementById('refineCard').classList.remove('hidden');
+                downloadUrl = data.result.download_url;
+                btnDownload.classList.remove('hidden');
+                // Set measure range hint
+                document.getElementById('measureEnd').value = data.analysis.total_measures;
+                setStatus(`Orchestrated: ${data.result.total_notes} notes across ${data.result.num_tracks} tracks`, 'success');
+            } catch (e) {
+                setStatus(`Error: ${e.message}`, 'error');
+                console.error('Orchestrate error:', e);
+            }
+            disableButtons(false);
+        });
+
+        btnReharmonize.addEventListener('click', async () => {
+            if (!currentFile) return;
+            setStatus('<span class="spinner"></span> Reharmonizing...', '');
+            disableButtons(true);
+
+            const form = new FormData();
+            form.append('file', currentFile);
+            form.append('style', styleSelect.value);
+
+            try {
+                const res = await fetch('/api/reharmonize', { method: 'POST', body: form });
+                const text = await res.text();
+                let data;
+                try { data = JSON.parse(text); } catch { throw new Error(`Server returned: ${res.status} — ${text.slice(0, 200)}`); }
+                if (!res.ok) throw new Error(data.detail || `${res.status} ${res.statusText}`);
+                showAnalysis(data.analysis);
+                showTracks(data.result);
+                hidePlan();
+                downloadUrl = data.result.download_url;
+                btnDownload.classList.remove('hidden');
+                setStatus(`Reharmonized: ${data.result.total_notes} notes, ${data.result.chords?.length || 0} chords`, 'success');
+            } catch (e) {
+                setStatus(`Error: ${e.message}`, 'error');
+                console.error('Reharmonize error:', e);
+            }
+            disableButtons(false);
+        });
+
+        btnDownload.addEventListener('click', () => {
+            if (downloadUrl) window.location.href = downloadUrl;
+        });
+
+        // AI Assistant Chat
+        const btnRefine = document.getElementById('btnRefine');
+        const feedbackInput = document.getElementById('feedbackInput');
+        const chatHistory = document.getElementById('chatHistory');
+
+        function addChatMsg(role, text) {
+            const isUser = role === 'user';
+            const div = document.createElement('div');
+            div.style.cssText = `padding:6px 10px;margin:4px 0;border-radius:8px;max-width:85%;
+                ${isUser ? 'margin-left:auto;background:var(--accent);color:#fff;text-align:right;' : 'background:var(--surface2);color:var(--text);'}`;
+            div.textContent = text;
+            chatHistory.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function isQuestion(text) {
+            const t = text.toLowerCase();
+            return t.startsWith('what') || t.startsWith('which') || t.startsWith('how') ||
+                   t.startsWith('why') || t.startsWith('is ') || t.startsWith('are ') ||
+                   t.startsWith('does') || t.startsWith('can ') || t.startsWith('tell me') ||
+                   t.endsWith('?');
+        }
+
+        btnRefine.addEventListener('click', async () => {
+            const feedback = feedbackInput.value.trim();
+            if (!feedback) return;
+            addChatMsg('user', feedback);
+            feedbackInput.value = '';
+            btnRefine.disabled = true;
+
+            // Questions about current analysis — answer locally
+            if (isQuestion(feedback) && dawState.lastAnalysis) {
+                const plan = dawState._pendingPlan;
+                const analysis = dawState.lastAnalysis;
+                let answer = '';
+                const fl = feedback.toLowerCase();
+                if (fl.includes('key')) {
+                    answer = analysis ? `The piece is in ${analysis.key}.` : 'No analysis available yet. Orchestrate a MIDI file first.';
+                } else if (fl.includes('tempo') || fl.includes('bpm')) {
+                    answer = analysis ? `Tempo is ${Math.round(analysis.tempo)} BPM.` : 'No analysis available yet.';
+                } else if (fl.includes('time sig')) {
+                    answer = analysis ? `Time signature is ${analysis.time_sig[0]}/${analysis.time_sig[1]}.` : 'No analysis available yet.';
+                } else if (fl.includes('instrument') || fl.includes('what is playing')) {
+                    const roles = plan.roles || [];
+                    answer = roles.length ? `Current instruments: ${roles.map(r => r.display_name + ' (' + r.role + ')').join(', ')}` : 'No plan available.';
+                } else if (fl.includes('chord') || fl.includes('harmony')) {
+                    answer = analysis && analysis.chords ? `Chord progression: ${analysis.chords.slice(0, 12).join(' - ')}` : 'No chord data available.';
+                } else if (fl.includes('measure') || fl.includes('how long')) {
+                    answer = analysis ? `${analysis.total_measures} measures total.` : 'No analysis available.';
+                } else {
+                    // Unknown question — still try refine endpoint
+                    answer = null;
+                }
+                if (answer) {
+                    addChatMsg('assistant', answer);
+                    btnRefine.disabled = false;
+                    setStatus('', '');
+                    return;
+                }
+            }
+
+            // Refinement command — send to server
+            setStatus('<span class="spinner"></span> Working on it...', '');
+            const form = new FormData();
+            form.append('feedback', feedback);
+            form.append('measure_start', document.getElementById('measureStart').value || '0');
+            form.append('measure_end', document.getElementById('measureEnd').value || '0');
+
+            try {
+                const res = await fetch('/api/refine', { method: 'POST', body: form });
+                const text = await res.text();
+                let data;
+                try { data = JSON.parse(text); } catch { throw new Error(`Server returned: ${res.status} — ${text.slice(0, 200)}`); }
+                if (!res.ok) throw new Error(data.detail || `${res.status}`);
+                showPlan(data.plan);
+                showTracks(data.result);
+                showAudio(data.result.audio_url);
+                downloadUrl = data.result.download_url;
+                const summary = `Done — ${data.result.total_notes} notes across ${data.result.num_tracks} tracks.`;
+                addChatMsg('assistant', summary);
+                setStatus(summary, 'success');
+            } catch (e) {
+                addChatMsg('assistant', `Error: ${e.message}`);
+                setStatus(`Error: ${e.message}`, 'error');
+                console.error('Refine error:', e);
+            }
+            btnRefine.disabled = false;
+        });
+
+        // Enter key in feedback input triggers refine
+        feedbackInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') btnRefine.click();
+        });
+
+        // SoundFont upload
+        const sfDropZone = document.getElementById('sfDropZone');
+        const sfInput = document.getElementById('sfInput');
+        const sfName = document.getElementById('sfName');
+
+        sfDropZone.addEventListener('click', () => sfInput.click());
+        sfDropZone.addEventListener('dragover', e => { e.preventDefault(); sfDropZone.classList.add('dragover'); });
+        sfDropZone.addEventListener('dragleave', () => sfDropZone.classList.remove('dragover'));
+        sfDropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            sfDropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) uploadSoundFont(e.dataTransfer.files[0]);
+        });
+        sfInput.addEventListener('change', () => {
+            if (sfInput.files.length) uploadSoundFont(sfInput.files[0]);
+        });
+
+        async function uploadSoundFont(file) {
+            if (!file.name.toLowerCase().endsWith('.sf2')) {
+                setStatus('Error: Please upload a .sf2 SoundFont file.', 'error');
+                return;
+            }
+            setStatus(`<span class="spinner"></span> Uploading ${file.name}...`, '');
+            const form = new FormData();
+            form.append('file', file);
+            try {
+                const res = await fetch('/api/soundfont', { method: 'POST', body: form });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Upload failed');
+                sfName.textContent = `${data.name} (${data.size_mb} MB)`;
+                sfName.classList.remove('hidden');
+                document.getElementById('audioNote').textContent = `Using custom SoundFont: ${data.name}`;
+                setStatus(`SoundFont loaded: ${data.name}`, 'success');
+                loadSoundFontList();
+            } catch (e) {
+                setStatus(`SoundFont error: ${e.message}`, 'error');
+            }
+        }
+
+        async function loadSoundFontList() {
+            try {
+                const res = await fetch('/api/soundfonts');
+                const data = await res.json();
+                const list = document.getElementById('sfList');
+                if (data.soundfonts.length === 0) { list.innerHTML = ''; return; }
+                list.innerHTML = data.soundfonts.map(sf =>
+                    `<div style="padding:3px 0;display:flex;justify-content:space-between;align-items:center;">
+                        <span>${sf.active ? '<span style="color:var(--success);">&#9679;</span> ' : ''}${sf.name} (${sf.size_mb} MB)</span>
+                        ${!sf.active ? `<button onclick="selectSoundFont('${sf.name}')" style="width:auto;padding:2px 8px;font-size:10px;">Use</button>` : ''}
+                    </div>`
+                ).join('');
+            } catch {}
+        }
+
+        window.selectSoundFont = async function(name) {
+            const form = new FormData();
+            form.append('name', name);
+            const res = await fetch('/api/soundfont/select', { method: 'POST', body: form });
+            if (res.ok) {
+                document.getElementById('audioNote').textContent = `Using custom SoundFont: ${name}`;
+                setStatus(`SoundFont switched to: ${name}`, 'success');
+                loadSoundFontList();
+            }
+        };
+
+        loadSoundFontList();
+
+        // Rendering
+        function showAnalysis(analysis) {
+            dawState.lastAnalysis = analysis;
+            const card = document.getElementById('analysisCard');
+
+            document.getElementById('statsGrid').innerHTML = [
+                stat(analysis.key, 'Key'),
+                stat(analysis.tempo, 'BPM'),
+                stat(analysis.time_sig, 'Time Sig'),
+                stat(analysis.total_measures, 'Measures'),
+                stat(analysis.note_counts.total, 'Notes'),
+            ].join('');
+        }
+
+        function showPlan(plan) {
+            const card = document.getElementById('planCard');
+
+            document.getElementById('rolesGrid').innerHTML = plan.roles
+                .map(r => `
+                    <div class="role-card ${r.role}">
+                        <div class="instrument">${r.instrument}</div>
+                        <div class="role-label">${r.role}${r.doubles ? ` (doubles ${r.doubles})` : ''}</div>
+                    </div>
+                `).join('');
+
+            // Stash plan for DAW — trigger render if result already available
+            dawState._pendingPlan = plan;
+            if (dawState._pendingResult) {
+                _renderDAW(dawState._pendingResult, plan);
+            }
+        }
+
+        function hidePlan() {
+            document.getElementById('planCard').classList.add('hidden');
+        }
+
+        // ---------------------------------------------------------------
+        // DAW Multitrack Viewer
+        // ---------------------------------------------------------------
+        const dawCard = document.getElementById('dawCard');
+        const dawViewport = document.getElementById('dawViewport');
+        const dawRuler = document.getElementById('dawRuler');
+        const dawLanes = document.getElementById('dawLanes');
+        const dawPlayhead = document.getElementById('dawPlayhead');
+        const dawSelection = document.getElementById('dawSelection');
+        const dawPlayBtn = document.getElementById('dawPlay');
+        const dawStopBtn = document.getElementById('dawStop');
+        const dawTimeEl = document.getElementById('dawTime');
+        const dawDurationEl = document.getElementById('dawDuration');
+        const dawInfoEl = document.getElementById('dawInfo');
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        let dawState = {
+            trackNotes: {},    // {name: [{pitch, start, end, velocity}]}
+            tempo: 120,
+            tpb: 480,
+            timeSig: [4, 4],
+            totalMeasures: 0,
+            totalTicks: 0,
+            duration: 0,       // seconds
+            playing: false,
+            animFrame: null,
+            mutedTracks: new Set(),
+            selStart: -1,      // selection start measure
+            selEnd: -1,
+            laneWidth: 0,      // pixels for the notes area
+            labelWidth: 110,
+        };
+
+        // Role -> color mapping
+        const ROLE_COLORS = {
+            melody: '#d4365a', doubling: '#d4365a',
+            bass: '#2a7abf',
+            countermelody: '#7c3aed',
+            harmony: '#2aaa70',
+            timpani: '#c49a1a',
+            percussion: '#d97706',
+        };
+
+        function _trackColor(trackName, plan) {
+            if (!plan) return '#2aaa70';
+            const role = plan.roles.find(r => r.instrument === trackName);
+            if (role) return ROLE_COLORS[role.role] || '#2aaa70';
+            return '#2aaa70';
+        }
+
+        function showTracks(result) {
+            // Called by orchestrate/refine — delegates to showDAW
+            dawState._pendingResult = result;
+            if (dawState._pendingPlan) {
+                _renderDAW(result, dawState._pendingPlan);
+            }
+        }
+
+        function showAudio(audioUrl) {
+            if (audioUrl) {
+                audioPlayer.src = audioUrl;
+                audioPlayer.load();
+                audioPlayer.onloadedmetadata = () => {
+                    dawState.duration = audioPlayer.duration;
+                    dawDurationEl.textContent = `/ ${_fmtTime(audioPlayer.duration)}`;
+                };
+            } else {
+                audioPlayer.src = '';
+                dawState.duration = 0;
+            }
+        }
+
+        function _renderDAW(result, plan) {
+            const trackNotes = result.track_notes || {};
+            if (Object.keys(trackNotes).length === 0) {
+                dawCard.classList.add('hidden');
+                return;
+            }
+            dawCard.classList.remove('hidden');
+            const tempo = result.tempo || 120;
+            const tpb = result.ticks_per_beat || 480;
+            const timeSig = result.time_sig || [4, 4];
+            const totalMeasures = result.total_measures || 1;
+            const ticksPerMeasure = tpb * timeSig[0];
+            const totalTicks = totalMeasures * ticksPerMeasure;
+
+            dawState.trackNotes = trackNotes;
+            dawState.tempo = tempo;
+            dawState.tpb = tpb;
+            dawState.timeSig = timeSig;
+            dawState.totalMeasures = totalMeasures;
+            dawState.totalTicks = totalTicks;
+
+            dawInfoEl.textContent = `${result.total_notes} notes | ${result.num_tracks} tracks | ${tempo.toFixed(0)} BPM`;
+
+            // Calculate lane width: min 60px per measure, at least viewport width
+            const viewW = dawViewport.clientWidth - dawState.labelWidth;
+            const pxPerMeasure = Math.max(80, viewW / totalMeasures);
+            const laneWidth = pxPerMeasure * totalMeasures;
+            dawState.laneWidth = laneWidth;
+
+            // Build ruler
+            dawRuler.innerHTML = '';
+            dawRuler.style.width = (dawState.labelWidth + laneWidth) + 'px';
+            // Empty label spacer
+            const spacer = document.createElement('div');
+            spacer.style.cssText = `width:${dawState.labelWidth}px;min-width:${dawState.labelWidth}px;background:var(--surface);border-right:1px solid var(--border);`;
+            dawRuler.appendChild(spacer);
+
+            // Seconds per measure = (beats_per_measure / (tempo / 60))
+            const secPerMeasure = (timeSig[0] * 60) / tempo;
+
+            for (let m = 0; m < totalMeasures; m++) {
+                const mark = document.createElement('div');
+                mark.className = 'daw-ruler-mark';
+                mark.style.left = (dawState.labelWidth + m * pxPerMeasure) + 'px';
+                mark.style.width = pxPerMeasure + 'px';
+                const sec = m * secPerMeasure;
+                const mm = Math.floor(sec / 60);
+                const ss = Math.floor(sec % 60);
+                mark.textContent = `${mm}:${ss.toString().padStart(2,'0')}`;
+                dawRuler.appendChild(mark);
+            }
+
+            // Build track lanes
+            dawLanes.innerHTML = '';
+            dawLanes.style.width = (dawState.labelWidth + laneWidth) + 'px';
+
+            // Order: melody first, then bass, counter, timpani, harmony, percussion
+            const roleOrder = ['melody', 'doubling', 'bass', 'countermelody', 'timpani', 'harmony', 'percussion'];
+            const trackEntries = Object.entries(trackNotes);
+            trackEntries.sort((a, b) => {
+                const roleA = plan.roles.find(r => r.instrument === a[0]);
+                const roleB = plan.roles.find(r => r.instrument === b[0]);
+                const idxA = roleA ? roleOrder.indexOf(roleA.role) : 99;
+                const idxB = roleB ? roleOrder.indexOf(roleB.role) : 99;
+                return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+            });
+
+            for (const [trackName, notes] of trackEntries) {
+                if (!notes || notes.length === 0) continue;
+                const color = _trackColor(trackName, plan);
+                const role = plan.roles.find(r => r.instrument === trackName);
+                const roleName = role ? role.role : '';
+
+                const lane = document.createElement('div');
+                lane.className = 'daw-lane';
+                lane.dataset.track = trackName;
+
+                // Label
+                const label = document.createElement('div');
+                label.className = 'daw-lane-label';
+                label.innerHTML = `
+                    <div class="role-dot" style="background:${color}"></div>
+                    <span class="inst-name" title="${trackName} (${roleName})">${trackName}</span>
+                    <span style="font-size:8px;color:var(--text-dim);">${notes.length}</span>
+                `;
+                lane.appendChild(label);
+
+                // Notes area
+                const notesDiv = document.createElement('div');
+                notesDiv.className = 'daw-lane-notes';
+                notesDiv.style.width = laneWidth + 'px';
+
+                // Find pitch range for this track
+                const pitches = notes.map(n => n.pitch);
+                const minP = Math.min(...pitches);
+                const maxP = Math.max(...pitches);
+                const pRange = Math.max(1, maxP - minP + 4);
+
+                for (const note of notes) {
+                    const el = document.createElement('div');
+                    el.className = 'daw-note';
+                    const x = (note.start / totalTicks) * laneWidth;
+                    const w = Math.max(2, ((note.end - note.start) / totalTicks) * laneWidth);
+                    // Y position: map pitch to lane height (36px), leave 4px padding top/bottom
+                    const yPct = 1 - (note.pitch - minP + 2) / pRange;
+                    const y = 4 + yPct * 28;
+                    el.style.cssText = `left:${x}px;width:${w}px;top:${y}px;background:${color};opacity:${0.5 + (note.velocity / 127) * 0.5};`;
+                    el.title = `${trackName}: pitch=${note.pitch} vel=${note.velocity}`;
+                    notesDiv.appendChild(el);
+                }
+
+                lane.appendChild(notesDiv);
+                dawLanes.appendChild(lane);
+            }
+
+            // Reset playhead
+            dawPlayhead.style.display = 'none';
+            dawPlayhead.style.left = dawState.labelWidth + 'px';
+            dawTimeEl.textContent = '0:00';
+            dawState.playing = false;
+            dawPlayBtn.textContent = '\u25B6';
+            dawPlayBtn.classList.remove('playing');
+
+            // Reset selection
+            dawSelection.style.display = 'none';
+            dawState.selStart = -1;
+            dawState.selEnd = -1;
+        }
+
+        // Transport: Play/Pause
+        dawPlayBtn.addEventListener('click', () => {
+            if (!audioPlayer.src) return;
+            if (dawState.playing) {
+                audioPlayer.pause();
+                dawState.playing = false;
+                dawPlayBtn.textContent = '\u25B6';
+                dawPlayBtn.classList.remove('playing');
+                if (dawState.animFrame) cancelAnimationFrame(dawState.animFrame);
+            } else {
+                audioPlayer.play();
+                dawState.playing = true;
+                dawPlayBtn.textContent = '\u23F8';
+                dawPlayBtn.classList.add('playing');
+                _animatePlayhead();
+            }
+        });
+
+        // Transport: Stop
+        dawStopBtn.addEventListener('click', () => {
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+            dawState.playing = false;
+            dawPlayBtn.textContent = '\u25B6';
+            dawPlayBtn.classList.remove('playing');
+            dawPlayhead.style.left = dawState.labelWidth + 'px';
+            dawTimeEl.textContent = '0:00';
+            if (dawState.animFrame) cancelAnimationFrame(dawState.animFrame);
+        });
+
+        // Animate playhead
+        function _animatePlayhead() {
+            if (!dawState.playing) return;
+            const pct = dawState.duration > 0 ? audioPlayer.currentTime / dawState.duration : 0;
+            const x = dawState.labelWidth + pct * dawState.laneWidth;
+            dawPlayhead.style.display = 'block';
+            dawPlayhead.style.left = x + 'px';
+            dawTimeEl.textContent = _fmtTime(audioPlayer.currentTime);
+
+            // Auto-scroll to keep playhead visible
+            const vpLeft = dawViewport.scrollLeft;
+            const vpWidth = dawViewport.clientWidth;
+            if (x - dawState.labelWidth > vpLeft + vpWidth - 40) {
+                dawViewport.scrollLeft = x - dawState.labelWidth - vpWidth / 3;
+            }
+
+            // End of track
+            if (audioPlayer.ended) {
+                dawState.playing = false;
+                dawPlayBtn.textContent = '\u25B6';
+                dawPlayBtn.classList.remove('playing');
+                return;
+            }
+
+            dawState.animFrame = requestAnimationFrame(_animatePlayhead);
+        }
+
+        // Click on viewport to seek
+        dawViewport.addEventListener('click', (e) => {
+            if (!audioPlayer.src || !dawState.duration) return;
+            const rect = dawViewport.getBoundingClientRect();
+            const x = e.clientX - rect.left + dawViewport.scrollLeft - dawState.labelWidth;
+            if (x < 0) return;
+            const pct = Math.min(1, x / dawState.laneWidth);
+            audioPlayer.currentTime = pct * dawState.duration;
+            dawPlayhead.style.display = 'block';
+            dawPlayhead.style.left = (dawState.labelWidth + pct * dawState.laneWidth) + 'px';
+            dawTimeEl.textContent = _fmtTime(audioPlayer.currentTime);
+        });
+
+        // Drag to select measure range
+        let _dragStart = null;
+        dawViewport.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.daw-lane-label')) return;
+            const rect = dawViewport.getBoundingClientRect();
+            const x = e.clientX - rect.left + dawViewport.scrollLeft - dawState.labelWidth;
+            if (x < 0 || !dawState.totalMeasures) return;
+            _dragStart = x;
+        });
+
+        dawViewport.addEventListener('mousemove', (e) => {
+            if (_dragStart === null) return;
+            const rect = dawViewport.getBoundingClientRect();
+            const x = e.clientX - rect.left + dawViewport.scrollLeft - dawState.labelWidth;
+            const pxPerMeasure = dawState.laneWidth / dawState.totalMeasures;
+            const m1 = Math.floor(Math.min(_dragStart, x) / pxPerMeasure);
+            const m2 = Math.ceil(Math.max(_dragStart, x) / pxPerMeasure);
+            if (m2 - m1 >= 1) {
+                dawSelection.style.display = 'block';
+                dawSelection.style.left = (dawState.labelWidth + m1 * pxPerMeasure) + 'px';
+                dawSelection.style.width = ((m2 - m1) * pxPerMeasure) + 'px';
+                dawState.selStart = m1;
+                dawState.selEnd = m2;
+            }
+        });
+
+        dawViewport.addEventListener('mouseup', () => {
+            if (_dragStart !== null && dawState.selStart >= 0) {
+                document.getElementById('measureStart').value = dawState.selStart;
+                document.getElementById('measureEnd').value = dawState.selEnd;
+            }
+            _dragStart = null;
+        });
+
+        // Clear selection (double-click on viewport)
+        dawViewport.addEventListener('dblclick', () => {
+            dawSelection.style.display = 'none';
+            dawState.selStart = -1;
+            dawState.selEnd = -1;
+            document.getElementById('measureStart').value = '0';
+            document.getElementById('measureEnd').value = dawState.totalMeasures || '0';
+        });
+
+        function _fmtTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function stat(value, label) {
+            return `<div class="stat"><div class="value">${value}</div><div class="label">${label}</div></div>`;
+        }
+
+        function setStatus(msg, type) {
+            status.innerHTML = msg;
+            status.className = 'status' + (type ? ` ${type}` : '');
+        }
+
+        function disableButtons(disabled) {
+            btnOrchestrate.disabled = disabled;
+            btnReharmonize.disabled = disabled;
+        }
+
+        // ---------------------------------------------------------------
+        // Log Panel
+        // ---------------------------------------------------------------
+        const logPanel = document.getElementById('logPanel');
+        const logHeader = document.getElementById('logHeader');
+        const logBody = document.getElementById('logBody');
+        const logCount = document.getElementById('logCount');
+        const logToggleIcon = document.getElementById('logToggleIcon');
+        const logLevelFilter = document.getElementById('logLevelFilter');
+        const logClear = document.getElementById('logClear');
+        const healthDot = document.getElementById('healthDot');
+
+        let logExpanded = false;
+        let lastLogTs = '';
+        let logPollTimer = null;
+        let totalErrors = 0;
+
+        logHeader.addEventListener('click', (e) => {
+            if (e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
+            logExpanded = !logExpanded;
+            logPanel.className = `log-panel ${logExpanded ? 'expanded' : 'collapsed'}`;
+            logToggleIcon.innerHTML = logExpanded ? '&#9660;' : '&#9650;';
+            if (logExpanded) fetchLogs();
+        });
+
+        logClear.addEventListener('click', (e) => {
+            e.stopPropagation();
+            logBody.innerHTML = '';
+            logCount.textContent = '0';
+            totalErrors = 0;
+        });
+
+        logLevelFilter.addEventListener('change', () => fetchLogs());
+        logLevelFilter.addEventListener('click', (e) => e.stopPropagation());
+
+        async function fetchLogs() {
+            try {
+                const level = logLevelFilter.value;
+                const res = await fetch(`/api/logs?level=${level}&limit=200`);
+                const data = await res.json();
+
+                logBody.innerHTML = data.logs.map(entry => {
+                    const exc = entry.exc ? `<span class="log-exc">${escapeHtml(entry.exc)}</span>` : '';
+                    return `<div class="log-entry"><span class="log-ts">${entry.ts}</span> <span class="log-level ${entry.level}">${entry.level.padEnd(7)}</span> <span class="log-src">[${entry.logger}]</span> <span class="log-msg">${escapeHtml(entry.message)}</span>${exc}</div>`;
+                }).join('');
+
+                logCount.textContent = data.total;
+                totalErrors = data.logs.filter(l => l.level === 'ERROR' || l.level === 'CRITICAL').length;
+
+                // Auto-scroll to bottom
+                logBody.scrollTop = logBody.scrollHeight;
+            } catch (e) {
+                // Server might be down
+            }
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // Health check
+        async function checkHealth() {
+            try {
+                const res = await fetch('/api/health');
+                if (res.ok) {
+                    healthDot.className = 'health-dot ok';
+                    const data = await res.json();
+                    healthDot.title = `Server OK | Python ${data.python} | ${data.device} | ${data.generated_files} files`;
+                } else {
+                    healthDot.className = 'health-dot error';
+                    healthDot.title = 'Server error';
+                }
+            } catch {
+                healthDot.className = 'health-dot error';
+                healthDot.title = 'Server unreachable';
+            }
+        }
+
+        // Poll logs every 2s when panel is open, health every 10s
+        setInterval(() => { if (logExpanded) fetchLogs(); }, 2000);
+        setInterval(checkHealth, 10000);
+        checkHealth();
+
+        // Add bottom padding to container so log panel doesn't cover content
+        document.querySelector('.container').style.paddingBottom = '48px';
+
+        // ── Symphony AI Chat ──────────────────────────────────────────
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatSuggestions = document.getElementById('chatSuggestions');
+
+        function addChatMessage(text, role) {
+            const msg = document.createElement('div');
+            msg.className = `chat-msg ${role}`;
+            if (role === 'ai') {
+                // Format: basic markdown-like rendering
+                let html = escapeHtml(text)
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>');
+                msg.innerHTML = html;
+            } else {
+                msg.textContent = text;
+            }
+            chatMessages.appendChild(msg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return msg;
+        }
+
+        function addSourceTag(msgEl, source) {
+            const tag = document.createElement('div');
+            tag.className = 'source-tag';
+            const labels = { 'llm+rag': 'LLM + Knowledge Base', 'rag': 'Knowledge Base', 'fallback': 'General' };
+            tag.textContent = labels[source] || source;
+            msgEl.appendChild(tag);
+        }
+
+        async function sendChat(question) {
+            if (!question.trim()) return;
+
+            // Hide suggestions after first message
+            if (chatSuggestions) chatSuggestions.style.display = 'none';
+
+            addChatMessage(question, 'user');
+            chatInput.value = '';
+            chatSend.disabled = true;
+            chatInput.disabled = true;
+
+            // Show typing indicator
+            const typing = document.createElement('div');
+            typing.className = 'chat-typing';
+            typing.textContent = 'Symphony AI is thinking...';
+            chatMessages.appendChild(typing);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const form = new FormData();
+                form.append('question', question);
+                const res = await fetch('/api/chat', { method: 'POST', body: form });
+                typing.remove();
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const msgEl = addChatMessage(data.answer, 'ai');
+                    addSourceTag(msgEl, data.source);
+                } else {
+                    addChatMessage('Sorry, something went wrong. Please try again.', 'ai');
+                }
+            } catch (e) {
+                typing.remove();
+                addChatMessage('Could not reach the server. Is Decimus running?', 'ai');
+            }
+
+            chatSend.disabled = false;
+            chatInput.disabled = false;
+            chatInput.focus();
+        }
+
+        chatSend.addEventListener('click', () => sendChat(chatInput.value));
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChat(chatInput.value);
+            }
+        });
+
+        // Suggestion buttons
+        document.querySelectorAll('.chat-suggestion').forEach(btn => {
+            btn.addEventListener('click', () => sendChat(btn.textContent));
+        });
+    </script>
+</body>
+</html>
